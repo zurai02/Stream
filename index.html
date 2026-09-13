@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Studio Pro Manager</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <header>
+            <div>
+                <h1>Stream Engine Studio</h1>
+            </div>
+            <div class="system-status">
+                <div id="statusDot" class="status-dot"></div>
+                <span id="liveStatusText">ENGINE OFFLINE</span>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <!-- Left Side: Source Configuration & Simulation -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Media Pipeline Control</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="video-container">
+                            <video id="localPreview" controls loop muted style="display: none;"></video>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Active Loop Asset</label>
+                            <input type="file" id="videoFile" accept="video/*">
+                        </div>
+                        <button class="btn btn-primary" id="actionBtn">Initialize Local Engine Instance</button>
+                    </div>
+                </div>
+
+                <!-- GitHub API Cloud Publisher Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">GitHub API Cloud Publisher</h2>
+                    </div>
+                    <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px;">
+                        <div class="form-group">
+                            <label class="form-label">GitHub Personal Access Token</label>
+                            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                        </div>
+                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label class="form-label">GitHub Username</label>
+                                <input type="text" id="ghUser" placeholder="username">
+                            </div>
+                            <div>
+                                <label class="form-label">Repository Name</label>
+                                <input type="text" id="ghRepo" placeholder="stream-repo">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <button class="btn btn-secondary" id="deployWorkflowBtn">1. Deploy Workflow File</button>
+                            <button class="btn btn-secondary" id="uploadVideoBtn">2. Upload Video Loop</button>
+                        </div>
+                        <div id="uploadStatus" style="font-size: 0.85rem; font-weight: 600; text-align: center; margin-top: 5px; color: var(--text-secondary);">Ready for provisioning.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Infrastructure Metrics & Provisioning Guide -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Telemetry & Infrastructure State</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="metric-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">Runtime Architecture</div>
+                                <div class="metric-value" style="font-size: 0.95rem;">GitHub Actions</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Target Bitrate</div>
+                                <div class="metric-value">4500 kbps</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Codec Package</div>
+                                <div class="metric-value">libx264 / aac</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Loop State iteration</div>
+                                <div class="metric-value" id="loopIteration">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Deployment Manifest Preview</h2>
+                    </div>
+                    <div class="panel-body">
+                        <textarea id="yamlOutput" class="code-editor-area" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
