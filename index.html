@@ -1,112 +1,1034 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Studio Pro Manager</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LoopStream — YouTube Loop Player</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <!-- Google Sign-In -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161922;
+      --border:    #252933;
+      --accent:    #5c6bff;
+      --accent2:   #a78bfa;
+      --text:      #e8eaf0;
+      --muted:     #666d82;
+      --danger:    #ff5252;
+      --radius:    10px;
+      --mono:      'Space Mono', monospace;
+      --sans:      'DM Sans', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── AUTH SCREEN ── */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2.5rem;
+    }
+
+    .auth-logo svg { width: 36px; height: 36px; }
+
+    .auth-logo-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .auth-logo-text span { color: var(--accent); }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .auth-card h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .auth-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    .feature-list {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .feature-list li {
+      font-size: 0.88rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-list li::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .google-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: #fff;
+      color: #1f1f1f;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 500;
+      font-family: var(--sans);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .google-btn:hover { background: #f0f0f0; }
+
+    .google-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .auth-note {
+      margin-top: 1.25rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ── APP SHELL ── */
+    #app-shell { display: none; min-height: 100vh; flex-direction: column; }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      height: 54px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.3px;
+    }
+
+    .logo svg { width: 22px; height: 22px; }
+    .logo span { color: var(--accent); }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      object-fit: cover;
+    }
+
+    .user-name {
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: none;
+    }
+
+    @media (min-width: 600px) { .user-name { display: block; } }
+
+    .sign-out-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: var(--sans);
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .sign-out-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* Main layout */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem 1rem;
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 800px) {
+      main {
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: 1fr;
+        align-items: start;
+        padding: 2rem 1.5rem;
+      }
+    }
+
+    /* Player panel */
+    .player-panel { display: flex; flex-direction: column; gap: 1rem; }
+
+    .url-bar {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .url-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .url-input:focus { border-color: var(--accent); }
+    .url-input::placeholder { color: var(--muted); }
+
+    .load-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.65rem 1.1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      font-family: var(--sans);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .load-btn:hover { opacity: 0.85; }
+
+    .player-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .player-wrapper iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .player-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      color: var(--muted);
+    }
+
+    .player-placeholder svg { width: 48px; height: 48px; opacity: 0.3; }
+    .player-placeholder p { font-size: 0.85rem; }
+
+    /* Controls */
+    .controls {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .controls label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      min-width: 70px;
+    }
+
+    .controls input[type="number"] {
+      width: 70px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .controls input[type="number"]:focus { border-color: var(--accent); }
+
+    .small-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .loop-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-track {
+      width: 38px; height: 22px;
+      background: var(--border);
+      border-radius: 999px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .toggle-track.active { background: var(--accent); }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .toggle-track.active .toggle-thumb { transform: translateX(16px); }
+
+    .loop-label { font-size: 0.85rem; }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+
+    .status-dot.active {
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade8088;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-text { font-size: 0.8rem; color: var(--muted); }
+
+    /* Sidebar */
+    .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+    }
+
+    /* Queue */
+    .queue-list {
+      list-style: none;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .queue-list::-webkit-scrollbar { width: 4px; }
+    .queue-list::-webkit-scrollbar-track { background: transparent; }
+    .queue-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .queue-item:last-child { border-bottom: none; }
+    .queue-item:hover { background: rgba(255,255,255,0.03); }
+    .queue-item.playing { background: rgba(92, 107, 255, 0.08); }
+
+    .queue-thumb {
+      width: 56px; height: 32px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .queue-info { flex: 1; min-width: 0; }
+
+    .queue-title {
+      font-size: 0.82rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .queue-vid-id {
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+
+    .queue-remove {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .queue-remove:hover { color: var(--danger); }
+
+    .queue-empty {
+      padding: 1.5rem 1rem;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .add-queue-row {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .add-queue-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .add-queue-input:focus { border-color: var(--accent); }
+    .add-queue-input::placeholder { color: var(--muted); }
+
+    .add-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+
+    /* Stats panel */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .stat-cell {
+      padding: 0.9rem 1rem;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-cell:nth-child(2n) { border-right: none; }
+    .stat-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Error toast */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.85rem;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="dashboard-wrapper">
-        <header>
-            <div>
-                <h1>Stream Engine Studio</h1>
-            </div>
-            <div class="system-status">
-                <div id="statusDot" class="status-dot"></div>
-                <span id="liveStatusText">ENGINE OFFLINE</span>
-            </div>
-        </header>
+<!-- ══ AUTH SCREEN ══ -->
+<div id="auth-screen">
+  <div class="auth-logo">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="18" r="18" fill="#5c6bff" fill-opacity="0.15"/>
+      <path d="M12 12 L12 24 L26 18 Z" fill="#5c6bff"/>
+      <path d="M22 14 Q28 18 22 22" stroke="#a78bfa" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </svg>
+    <span class="auth-logo-text">Loop<span>Stream</span></span>
+  </div>
 
-        <div class="grid-layout">
-            <!-- Left Side: Source Configuration & Simulation -->
-            <div style="display: flex; flex-direction: column; gap: 24px;">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Media Pipeline Control</h2>
-                    </div>
-                    <div class="panel-body">
-                        <div class="video-container">
-                            <video id="localPreview" controls loop muted style="display: none;"></video>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Active Loop Asset</label>
-                            <input type="file" id="videoFile" accept="video/*">
-                        </div>
-                        <button class="btn btn-primary" id="actionBtn">Initialize Local Engine Instance</button>
-                    </div>
-                </div>
+  <div class="auth-card">
+    <h1>Loop any YouTube video</h1>
+    <p>Sign in with Google to save your queue, track loops, and pick up where you left off.</p>
 
-                <!-- GitHub API Cloud Publisher Panel -->
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">GitHub API Cloud Publisher</h2>
-                    </div>
-                    <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px;">
-                        <div class="form-group">
-                            <label class="form-label">GitHub Personal Access Token</label>
-                            <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-                        </div>
-                        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                            <div>
-                                <label class="form-label">GitHub Username</label>
-                                <input type="text" id="ghUser" placeholder="username">
-                            </div>
-                            <div>
-                                <label class="form-label">Repository Name</label>
-                                <input type="text" id="ghRepo" placeholder="stream-repo">
-                            </div>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                            <button class="btn btn-secondary" id="deployWorkflowBtn">1. Deploy Workflow File</button>
-                            <button class="btn btn-secondary" id="uploadVideoBtn">2. Upload Video Loop</button>
-                        </div>
-                        <div id="uploadStatus" style="font-size: 0.85rem; font-weight: 600; text-align: center; margin-top: 5px; color: var(--text-secondary);">Ready for provisioning.</div>
-                    </div>
-                </div>
-            </div>
+    <ul class="feature-list">
+      <li>Loop full videos or custom time segments</li>
+      <li>Build a persistent watch queue</li>
+      <li>Track total loops and watch time</li>
+      <li>Works with any public YouTube URL</li>
+    </ul>
 
-            <!-- Right Side: Infrastructure Metrics & Provisioning Guide -->
-            <div style="display: flex; flex-direction: column; gap: 24px;">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Telemetry & Infrastructure State</h2>
-                    </div>
-                    <div class="panel-body">
-                        <div class="metric-grid">
-                            <div class="metric-card">
-                                <div class="metric-label">Runtime Architecture</div>
-                                <div class="metric-value" style="font-size: 0.95rem;">GitHub Actions</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Target Bitrate</div>
-                                <div class="metric-value">4500 kbps</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Codec Package</div>
-                                <div class="metric-value">libx264 / aac</div>
-                            </div>
-                            <div class="metric-card">
-                                <div class="metric-label">Loop State iteration</div>
-                                <div class="metric-value" id="loopIteration">0</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <button class="google-btn" id="google-sign-in-btn" onclick="handleGoogleSignIn()">
+      <!-- Google G logo -->
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Deployment Manifest Preview</h2>
-                    </div>
-                    <div class="panel-body">
-                        <textarea id="yamlOutput" class="code-editor-area" readonly></textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <p class="auth-note">Your data stays in your browser. We only read your Google profile name and photo.</p>
+  </div>
+</div>
+
+<!-- ══ APP SHELL ══ -->
+<div id="app-shell">
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="11" cy="11" r="11" fill="#5c6bff" fill-opacity="0.15"/>
+        <path d="M7 7 L7 15 L16 11 Z" fill="#5c6bff"/>
+      </svg>
+      Loop<span>Stream</span>
     </div>
 
-    <script src="app.js"></script>
+    <div class="user-info">
+      <img class="user-avatar" id="user-avatar" src="" alt="avatar" />
+      <span class="user-name" id="user-name"></span>
+      <button class="sign-out-btn" onclick="signOut()">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Player panel -->
+    <div class="player-panel">
+      <div class="url-bar">
+        <input
+          class="url-input"
+          id="url-input"
+          type="text"
+          placeholder="https://www.youtube.com/watch?v=..."
+        />
+        <button class="load-btn" onclick="loadVideo()">Load</button>
+      </div>
+
+      <div class="player-wrapper" id="player-wrapper">
+        <div class="player-placeholder" id="player-placeholder">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="10" fill="currentColor" fill-opacity="0.1"/>
+            <path d="M16 12 L16 36 L38 24 Z" fill="currentColor"/>
+          </svg>
+          <p>Paste a YouTube URL above to begin looping</p>
+        </div>
+        <!-- iframe injected here -->
+      </div>
+
+      <div class="controls">
+        <div class="controls-row">
+          <div class="loop-toggle" id="loop-toggle" onclick="toggleLoop()">
+            <div class="toggle-track active" id="toggle-track">
+              <div class="toggle-thumb"></div>
+            </div>
+            <span class="loop-label">Loop</span>
+          </div>
+
+          <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+            <div class="status-dot" id="status-dot"></div>
+            <span class="status-text" id="status-text">No video loaded</span>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <label>Start (s)</label>
+          <input type="number" id="start-time" value="0" min="0" placeholder="0" />
+          <label>End (s)</label>
+          <input type="number" id="end-time" value="" min="0" placeholder="Full" />
+          <span class="small-label">Leave end blank to loop entire video</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Stats -->
+      <div class="panel">
+        <div class="panel-header">Session Stats</div>
+        <div class="stats-grid">
+          <div class="stat-cell">
+            <div class="stat-value" id="stat-loops">0</div>
+            <div class="stat-label">Loops completed</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value" id="stat-time">0m</div>
+            <div class="stat-label">Watch time</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value" id="stat-queue">0</div>
+            <div class="stat-label">In queue</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value" id="stat-current">—</div>
+            <div class="stat-label">Current video</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Queue -->
+      <div class="panel">
+        <div class="panel-header">Queue</div>
+        <ul class="queue-list" id="queue-list">
+          <li class="queue-empty" id="queue-empty">No videos in queue</li>
+        </ul>
+        <div class="add-queue-row">
+          <input
+            class="add-queue-input"
+            id="queue-input"
+            type="text"
+            placeholder="YouTube URL or video ID"
+          />
+          <button class="add-btn" onclick="addToQueue()">Add</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────────────────────
+  // Replace with your actual Google OAuth Client ID
+  const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+
+  // ── STATE ────────────────────────────────────────────────────────────────
+  let currentVideoId = null;
+  let loopEnabled    = true;
+  let loopCount      = 0;
+  let watchSeconds   = 0;
+  let watchTimer     = null;
+  let queue          = [];
+  let currentQueueIndex = -1;
+  let player         = null;   // YT.Player instance
+  let ytReady        = false;
+
+  // Restore session
+  const saved = JSON.parse(sessionStorage.getItem('ls_state') || '{}');
+  if (saved.queue) queue = saved.queue;
+  if (saved.loopCount) loopCount = saved.loopCount;
+  if (saved.watchSeconds) watchSeconds = saved.watchSeconds;
+
+  // ── GOOGLE AUTH ──────────────────────────────────────────────────────────
+  window.onload = function () {
+    const storedUser = localStorage.getItem('ls_user');
+    if (storedUser) {
+      showApp(JSON.parse(storedUser));
+    }
+
+    if (typeof google !== 'undefined') {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        auto_select: false,
+      });
+    }
+
+    updateStats();
+    renderQueue();
+  };
+
+  function handleGoogleSignIn() {
+    if (typeof google === 'undefined') {
+      showToast('Google Sign-In script not loaded. Check your Client ID setup.');
+      return;
+    }
+    google.accounts.id.prompt();
+  }
+
+  function handleCredentialResponse(response) {
+    const payload = parseJwt(response.credential);
+    const user = {
+      name:    payload.name,
+      email:   payload.email,
+      picture: payload.picture,
+    };
+    localStorage.setItem('ls_user', JSON.stringify(user));
+    showApp(user);
+  }
+
+  function parseJwt(token) {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  }
+
+  function signOut() {
+    localStorage.removeItem('ls_user');
+    if (typeof google !== 'undefined') {
+      google.accounts.id.disableAutoSelect();
+    }
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-shell').style.display   = 'none';
+    stopWatchTimer();
+  }
+
+  function showApp(user) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-shell').style.display   = 'flex';
+    document.getElementById('user-name').textContent     = user.name;
+    document.getElementById('user-avatar').src           = user.picture || '';
+    loadYouTubeAPI();
+  }
+
+  // ── YOUTUBE IFrame API ───────────────────────────────────────────────────
+  function loadYouTubeAPI() {
+    if (window.YT) { ytReady = true; return; }
+    const tag = document.createElement('script');
+    tag.src   = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  }
+
+  window.onYouTubeIframeAPIReady = function () {
+    ytReady = true;
+  };
+
+  function extractVideoId(input) {
+    if (!input) return null;
+    const patterns = [
+      /(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/,
+      /^([A-Za-z0-9_-]{11})$/,
+    ];
+    for (const p of patterns) {
+      const m = input.match(p);
+      if (m) return m[1];
+    }
+    return null;
+  }
+
+  function loadVideo() {
+    const raw = document.getElementById('url-input').value.trim();
+    const vid = extractVideoId(raw);
+    if (!vid) { showToast('Invalid YouTube URL or video ID'); return; }
+    playVideoById(vid);
+  }
+
+  function playVideoById(vid, title) {
+    currentVideoId = vid;
+    document.getElementById('player-placeholder').style.display = 'none';
+
+    const startSec = parseInt(document.getElementById('start-time').value) || 0;
+    const endSec   = parseInt(document.getElementById('end-time').value)   || 0;
+
+    const playerSrc = buildEmbedUrl(vid, startSec, endSec);
+
+    if (player) {
+      player.destroy();
+      player = null;
+    }
+
+    // Remove any existing iframe
+    const old = document.getElementById('yt-player');
+    if (old) old.remove();
+
+    // Create iframe container
+    const container = document.createElement('div');
+    container.id = 'yt-player';
+    document.getElementById('player-wrapper').appendChild(container);
+
+    if (ytReady) {
+      player = new YT.Player('yt-player', {
+        videoId: vid,
+        playerVars: {
+          autoplay: 1,
+          start:    startSec,
+          end:      endSec || undefined,
+          loop:     loopEnabled ? 1 : 0,
+          playlist: loopEnabled ? vid : undefined,
+          rel:      0,
+          modestbranding: 1,
+        },
+        events: {
+          onStateChange: onPlayerStateChange,
+        },
+      });
+    } else {
+      // Fallback: plain iframe
+      const iframe = document.createElement('iframe');
+      iframe.src = playerSrc;
+      iframe.allowFullscreen = true;
+      iframe.allow = 'autoplay; encrypted-media';
+      iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
+      container.style.cssText = 'position:absolute;inset:0;';
+      container.appendChild(iframe);
+    }
+
+    setStatus(true, `Playing ${vid}`);
+    startWatchTimer();
+    updateStats(title || vid.slice(0, 8));
+    saveState();
+  }
+
+  function buildEmbedUrl(vid, start, end) {
+    let url = `https://www.youtube.com/embed/${vid}?autoplay=1&rel=0&modestbranding=1`;
+    if (loopEnabled) url += `&loop=1&playlist=${vid}`;
+    if (start > 0)   url += `&start=${start}`;
+    if (end   > 0)   url += `&end=${end}`;
+    return url;
+  }
+
+  function onPlayerStateChange(e) {
+    // YT.PlayerState.ENDED = 0
+    if (e.data === 0) {
+      loopCount++;
+      updateStats();
+      saveState();
+
+      if (loopEnabled) {
+        const startSec = parseInt(document.getElementById('start-time').value) || 0;
+        player.seekTo(startSec, true);
+        player.playVideo();
+      } else if (currentQueueIndex < queue.length - 1) {
+        currentQueueIndex++;
+        const next = queue[currentQueueIndex];
+        playVideoById(next.id, next.title);
+        renderQueue();
+      }
+    }
+  }
+
+  // ── LOOP TOGGLE ──────────────────────────────────────────────────────────
+  function toggleLoop() {
+    loopEnabled = !loopEnabled;
+    const track = document.getElementById('toggle-track');
+    if (loopEnabled) track.classList.add('active');
+    else             track.classList.remove('active');
+    if (currentVideoId) {
+      playVideoById(currentVideoId);
+    }
+  }
+
+  // ── QUEUE ────────────────────────────────────────────────────────────────
+  function addToQueue() {
+    const raw = document.getElementById('queue-input').value.trim();
+    const vid = extractVideoId(raw);
+    if (!vid) { showToast('Invalid YouTube URL or video ID'); return; }
+    if (queue.find(q => q.id === vid)) { showToast('Already in queue'); return; }
+    queue.push({ id: vid, title: vid });
+    document.getElementById('queue-input').value = '';
+    renderQueue();
+    saveState();
+  }
+
+  function removeFromQueue(idx) {
+    queue.splice(idx, 1);
+    if (currentQueueIndex >= idx) currentQueueIndex = Math.max(0, currentQueueIndex - 1);
+    renderQueue();
+    saveState();
+  }
+
+  function renderQueue() {
+    const list  = document.getElementById('queue-list');
+    const empty = document.getElementById('queue-empty');
+    list.innerHTML = '';
+
+    if (queue.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'queue-empty';
+      li.id = 'queue-empty';
+      li.textContent = 'No videos in queue';
+      list.appendChild(li);
+    } else {
+      queue.forEach((item, i) => {
+        const li = document.createElement('li');
+        li.className = 'queue-item' + (i === currentQueueIndex ? ' playing' : '');
+        li.innerHTML = `
+          <img class="queue-thumb"
+               src="https://img.youtube.com/vi/${item.id}/mqdefault.jpg"
+               alt="" onerror="this.style.opacity=0.3" />
+          <div class="queue-info">
+            <div class="queue-title">${item.title}</div>
+            <div class="queue-vid-id">${item.id}</div>
+          </div>
+          <button class="queue-remove" title="Remove" onclick="removeFromQueue(${i})">✕</button>
+        `;
+        li.querySelector('.queue-info').addEventListener('click', () => {
+          currentQueueIndex = i;
+          playVideoById(item.id, item.title);
+          renderQueue();
+        });
+        list.appendChild(li);
+      });
+    }
+    updateStats();
+  }
+
+  // ── STATS ────────────────────────────────────────────────────────────────
+  function updateStats(vidLabel) {
+    document.getElementById('stat-loops').textContent = loopCount;
+    document.getElementById('stat-queue').textContent = queue.length;
+    const mins = Math.floor(watchSeconds / 60);
+    const secs = watchSeconds % 60;
+    document.getElementById('stat-time').textContent =
+      mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+    if (vidLabel) {
+      document.getElementById('stat-current').textContent =
+        vidLabel.length > 8 ? vidLabel.slice(0, 8) + '…' : vidLabel;
+    }
+  }
+
+  function startWatchTimer() {
+    stopWatchTimer();
+    watchTimer = setInterval(() => {
+      watchSeconds++;
+      updateStats();
+      saveState();
+    }, 1000);
+  }
+
+  function stopWatchTimer() {
+    if (watchTimer) { clearInterval(watchTimer); watchTimer = null; }
+  }
+
+  // ── STATUS ───────────────────────────────────────────────────────────────
+  function setStatus(active, text) {
+    document.getElementById('status-dot').className = 'status-dot' + (active ? ' active' : '');
+    document.getElementById('status-text').textContent = text;
+  }
+
+  // ── PERSIST STATE ────────────────────────────────────────────────────────
+  function saveState() {
+    sessionStorage.setItem('ls_state', JSON.stringify({ queue, loopCount, watchSeconds }));
+  }
+
+  // ── TOAST ────────────────────────────────────────────────────────────────
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
 </body>
 </html>
